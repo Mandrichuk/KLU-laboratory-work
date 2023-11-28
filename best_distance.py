@@ -8,69 +8,58 @@ def distance(lat1, lon1, lat2, lon2):
 
 
 with open("RoadNode.csv", "r") as node_file:
-    csv_road_node = csv.reader(node_file)
     with open("RoadLink.csv", "r") as link_file: 
-        csv_road_link = csv.reader(link_file)
+        csv_road_node = list(csv.reader(node_file))[1:]
+        csv_road_link = list(csv.reader(link_file))[1:]
 
         from_to_nodes = []
-        for row_index, row in enumerate(list(csv_road_link)[1:4]):
+        for row_index, row in enumerate(csv_road_link):
             row = row[0].split(";")
-            from_to_nodes.append({
-                "obj_id": int(row[0]),
-                "from_node": int(row[3]),
-                "to_node": int(row[4])
-            })
+            if row[5] == "France" or row[5] == "Germany":
+                from_to_nodes.append({
+                    "id": int(row[0]),
+                    "from_node": int(row[3]),
+                    "to_node": int(row[4])
+                })
+
+        fastest_route = { "id": "", "distance": 100000 }
+
+
+        for ft_node in from_to_nodes:
+            coords_from = { "x": 0.0, "y": 0.0 }
+            coords_to = { "x": 0.0, "y": 0.0 }
+
+            for road in csv_road_node:
+                road_id = int(road[2])
+                
+                if len(road[7]) > 1 and len(road[8]) > 1 and road[7] != "X" and road[8] != "Y" and road[7] != "0.0" and road[8] != "0.0":
+                    if road_id == ft_node["from_node"]:
+                        x = float(road[7].split("e")[0])
+                        y = float(road[8].split("e")[0])
+                        coords_from = { "x": x, "y": y }
+
+                    if road_id == ft_node["to_node"]:
+                        x = float(road[7].split("e")[0])
+                        y = float(road[8].split("e")[0])
+                        coords_to = { "x": x, "y": y }
+ 
+            current_route = distance(
+                coords_from["x"],
+                coords_from["y"],
+                coords_to["x"],
+                coords_to["y"],
+            )
+
+            print("current: " + str(current_route))
+            print("fastest: " + str(fastest_route))
+            if current_route < fastest_route["distance"] and current_route != 0.0:
+                fastest_route["id"] = ft_node["id"]
+                fastest_route["distance"] = current_route
 
 
 
-
-        fastest_destination = {
-            "obj_id": from_to_nodes[0]["obj_id"], 
-            "distance": 1047.63689283956,    
-        }
-
-        # print(from_to_nodes[0]["obj_id"])
-
-        for node_index, node in enumerate(from_to_nodes):
-            from_node_id = from_to_nodes[node_index]["from_node"]
-            to_node_id = from_to_nodes[node_index]["to_node"]
-
-            for road_node in list(csv_road_node)[1:]:
-
-                x_part = road_node[7].split("e")[0]
-                y_part = road_node[8].split("e")[0]
-
-                # print(list(road_node)[0])
-
-                if int(list(road_node)[0]) == from_node_id:
-                    from_node = { 
-                        "x": float(x_part), 
-                        "y": float(y_part) 
-                    }
-1q
-                elif int(list(road_node)[0]) == to_node_id:
-                    to_node = { 
-                        "x": float(x_part), 
-                        "y": float(y_part) 
-                    }
-
-                    print("from_node")
-                    print(from_node)
-
-                    distance_calculations = distance(
-                        from_node["x"],
-                        to_node["x"],
-                        from_node["y"],
-                        to_node["y"],
-                    )
-
-                    if distance_calculations  < fastest_destination["distance"]:
-                        fastest_destination = { 
-                            "obj_id": node["obj_id"], 
-                            "distance": distance_calculations,     
-                        }
-
-
-        # print(fastest_destination)    
-                    
-            
+        print(f"""
+              Fastest Route:\n
+              ID: {fastest_route["id"]}\n
+              Distance: {fastest_route["distance"]}\n
+        """)
