@@ -14,15 +14,26 @@ with open("RoadNode.csv", "r") as node_file:
 
         from_to_nodes = []
         for row_index, row in enumerate(csv_road_link):
+            fuel_integer = int(row[3].split(";")[-1])
+            fuel_decimal = int(row[4].split(";")[0])
+            fuel_price = float(f"{fuel_integer}.{fuel_decimal}")
+
+
             row = row[0].split(";")
             if row[5] == "France" or row[5] == "Germany":
+
                 from_to_nodes.append({
                     "id": int(row[0]),
                     "from_node": int(row[3]),
-                    "to_node": int(row[4])
+                    "to_node": int(row[4]),
+                    "fuel_price": fuel_price
                 })
 
-        fastest_route = { "id": "", "distance": 100000 }
+
+        fastest_route = { 
+            "id": "", 
+            "distance_fuel": 100000 
+        }
 
 
         for ft_node in from_to_nodes:
@@ -43,23 +54,25 @@ with open("RoadNode.csv", "r") as node_file:
                         y = float(road[8].split("e")[0])
                         coords_to = { "x": x, "y": y }
  
-            current_route = distance(
+            current_distance = distance(
                 coords_from["x"],
                 coords_from["y"],
                 coords_to["x"],
                 coords_to["y"],
             )
+            current_distance_fuel = (current_distance + ft_node["fuel_price"]) / 2
 
-            print("current: " + str(current_route))
-            print("fastest: " + str(fastest_route))
-            if current_route < fastest_route["distance"] and current_route != 0.0:
+
+            print(f"Fastest distance {fastest_route['distance_fuel']}")
+            print(f"Current distance: {current_distance_fuel}")
+
+            if current_distance_fuel < fastest_route["distance_fuel"] and current_distance_fuel != 0.0:
                 fastest_route["id"] = ft_node["id"]
-                fastest_route["distance"] = current_route
+                fastest_route["distance_fuel"] = current_distance_fuel
 
 
-
-        print(f"""
-              Fastest Route:\n
-              ID: {fastest_route["id"]}\n
-              Distance: {fastest_route["distance"]}\n
+        print(f"""\nFastest way: 
+            \nID: {fastest_route["id"]} 
+            \nDistance: {fastest_route["distance_fuel"]}
         """)
+
